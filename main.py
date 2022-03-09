@@ -55,7 +55,7 @@ async def train_store(image_count : int, train_type : Optional[str] = None, buck
 
     #Importing data from cloud
     for i in range(image_count):
-        success = download_from_aws(bucket_name,str(i)+".png",currentPath+"/train_data/"+bucket_name+"/"+str(i)) #Assumed all image datas on the cloud is named as 0.png,1.png,2.png...
+        success = download_from_aws(bucket_name,str(i)+".png",os.path.join(currentPath,"train_data",bucket_name,str(i))) #Assumed all image datas on the cloud is named as 0.png,1.png,2.png...
         if not(success):
             return {"download" : "fail"}
 
