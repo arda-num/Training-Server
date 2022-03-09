@@ -20,10 +20,10 @@ Important: bucket_name represents user specific bucket name on the cloud
             -- images (files...)
 
         -- user_bucket_id1 (dir)
-        
+
             -- images (files...)
 
-This represents a general idea of how documentation is done. When a new user requests for a training new directory added for that user.
+This represents a general idea of how documentation is done. When a new user requests for a training new directory added for that user. On the other hand, when an existing user requests, his/her directory is deleted and generated from scratch.
 
 
         
