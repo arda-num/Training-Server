@@ -46,14 +46,14 @@ async def home():
 
 @app.get("/progress")
 async def train_store(image_count : int, train_type : Optional[str] = None, bucket_name : Optional[str] = BUCKET_NAME): #Delete optional for bucket name later
-
-    #Importing data from cloud
+    #Make necessary file operations
     currentPath = os.getcwd()
     bucket_path = os.path.join("train_data",bucket_name)
     if os.path.exists(os.path.join(currentPath,bucket_path)):
         shutil.rmtree(os.path.join(currentPath,bucket_path))
     os.mkdir(os.path.join(currentPath,bucket_path))
 
+    #Importing data from cloud
     for i in range(image_count):
         success = download_from_aws(bucket_name,str(i)+".png",currentPath+"/train_data/"+bucket_name+"/"+str(i)) #Assumed all image datas on the cloud is named as 0.png,1.png,2.png...
         if not(success):
