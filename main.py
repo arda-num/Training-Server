@@ -14,7 +14,7 @@ app = FastAPI()
 
 ACCESS_KEY = access_key
 SECRET_KEY = secret_key
-BUCKET_NAME = "s3blob-anticode"
+BUCKET_NAME = ""
 s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY,
                       aws_secret_access_key=SECRET_KEY)
 
@@ -48,10 +48,10 @@ async def home():
 async def train_store(image_count : int, train_type : Optional[str] = None, bucket_name : Optional[str] = BUCKET_NAME): #Delete optional for bucket name later
     #Make necessary file operations
     currentPath = os.getcwd()
-    bucket_path = os.path.join("train_data",bucket_name)
-    if os.path.exists(os.path.join(currentPath,bucket_path)):
-        shutil.rmtree(os.path.join(currentPath,bucket_path))
-    os.mkdir(os.path.join(currentPath,bucket_path))
+    bucketPath = os.path.join("train_data",bucket_name)
+    if os.path.exists(os.path.join(currentPath,bucketPath)):
+        shutil.rmtree(os.path.join(currentPath,bucketPath))
+    os.mkdir(os.path.join(currentPath,bucketPath))
 
     #Importing data from cloud
     for i in range(image_count):
