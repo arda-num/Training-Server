@@ -6,6 +6,8 @@ from secrets import access_key, secret_key
 import boto3
 from botocore.exceptions import NoCredentialsError
 import os,shutil
+from keras.models import load_model
+
 
 
 app = FastAPI()
@@ -76,12 +78,22 @@ async def train_store(image_count : int, train_type : Optional[str] = None, buck
         #TODO
         return {"Train type" : "Undefined"} 
 
+    #Arrangement in weights directory
+
+    weightsPath = os.path.join(currentPath,"weights",bucket_name)
+    if os.path.exists(weightsPath):
+        shutil.rmtree(weightsPath)
+    os.mkdir(weightsPath)
+
+    # model.save("model.h5")  #TODO
+    # del model               #TODO
+
     #Store weights to cloud
-    #TODO weights
-    # for i in range(image_count):
-    #     uploaded = upload_to_aws('local_file', bucket_name, 's3_file_name')
-    #     if not(uploaded):
-    #         return {"upload" : "fail"}
+
+    success = upload_to_aws(os.path.join(currentPath,"model.h5"),bucket_name,bucket_name+"_"+"model.h5")
+    if not success:
+        return {"upload" : "fail"}
+    
     return {
         "Training" : "Succesfull",
         "Storing" : "Succesfull"
@@ -90,4 +102,3 @@ async def train_store(image_count : int, train_type : Optional[str] = None, buck
 @app.get("/interrupt") #TODO
 async def interrupt_training():
     pass
-
