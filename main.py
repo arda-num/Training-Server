@@ -1,45 +1,15 @@
 from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel
-import cv2
-from secrets import access_key, secret_key
-import boto3
-from botocore.exceptions import NoCredentialsError
 import os,shutil
-from keras.models import load_model
-
-
+# from keras.models import load_model
+import pytorch_classification_script
+from utils import downloadDirectoryFroms3, upload_to_aws, download_from_aws
 
 app = FastAPI()
 
-#Connecting S3 Service
-
-ACCESS_KEY = access_key
-SECRET_KEY = secret_key
 BUCKET_NAME = ""
-s3 = boto3.client('s3', aws_access_key_id=ACCESS_KEY,
-                      aws_secret_access_key=SECRET_KEY)
-
-
-#S3 upload/download functions
-
-def upload_to_aws(local_file, bucket, s3_file):
-    global s3
-    try:
-        s3.upload_file(local_file, bucket, s3_file)
-        return True
-    except FileNotFoundError:
-        return False
-    except NoCredentialsError:
-        return False
-
-def download_from_aws(bucket_name,file_name,directory):
-    global s3
-    try:
-        s3.download_file(bucket_name,file_name,directory)
-        return True
-    except:
-        return False
+currentPath = os.getcwd()
 
 
 @app.get("/")
@@ -47,27 +17,38 @@ async def home():
     return "You have successfully landed!"
 
 @app.get("/progress")
-async def train_store(image_count : int, train_type : Optional[str] = None, bucket_name : Optional[str] = BUCKET_NAME): #Delete optional for bucket name later
+async def train_store(train_type : Optional[str] = None, bucket_name : Optional[str] = BUCKET_NAME): #Delete optional for bucket name later
     #Make necessary file operations
-    currentPath = os.getcwd()
+    
     bucketPath = os.path.join("train_data",bucket_name)
     if os.path.exists(os.path.join(currentPath,bucketPath)):
         shutil.rmtree(os.path.join(currentPath,bucketPath))
     os.mkdir(os.path.join(currentPath,bucketPath))
 
     #Importing data from cloud
-    for i in range(image_count):
-        success = download_from_aws(bucket_name,str(i)+".png",os.path.join(currentPath,"train_data",bucket_name,str(i))) #Assumed all image datas on the cloud is named as 0.png,1.png,2.png...
-        if not(success):
-            return {"download" : "fail"}
+    
+    success = downloadDirectoryFroms3("training-server-client-"+ bucket_name[-1],"dataset",os.path.join(currentPath,"train_data",bucket_name))
 
+    # success2 = download_from_aws("training-server-client-"+ bucket_name[-1],"annotations.json",os.path.join(currentPath,"train_data",bucket_name))
+    if not(success):
+            return {"download" : "fail"}
+            
     #img = cv2.imread(currentPath+"/train_data/"+bucket_name+"/"+str(i))
     #print(img)         
-                                        
+
+    #Arrangement in weights directory
+
+    weightsPath = os.path.join(currentPath,"weights",bucket_name)
+    if os.path.exists(weightsPath):
+        shutil.rmtree(weightsPath)
+    os.mkdir(weightsPath)
+                    
     #Initialize training                           
     if train_type == "classification":
-        #TODO
-        pass
+        model = pytorch_classification_script.train(bucket_name)
+        print(len(model))
+        return {"Hi" : "Hi"}
+        # model.save(os.path.join(weightsPath,"model.h5"))
     elif train_type == "obj_detection":
         #TODO
         pass
@@ -78,22 +59,15 @@ async def train_store(image_count : int, train_type : Optional[str] = None, buck
         #TODO
         return {"Train type" : "Undefined"} 
 
-    #Arrangement in weights directory
-
-    weightsPath = os.path.join(currentPath,"weights",bucket_name)
-    if os.path.exists(weightsPath):
-        shutil.rmtree(weightsPath)
-    os.mkdir(weightsPath)
-
-    # model.save("model.h5")  #TODO
-    # del model               #TODO
 
     #Store weights to cloud
 
-    success = upload_to_aws(os.path.join(currentPath,"model.h5"),bucket_name,bucket_name+"_"+"model.h5")
+    success = upload_to_aws(os.path.join(currentPath,"weights",bucket_name,"model.h5"),"training-server-model-"+bucket_name,"model.h5")
     if not success:
         return {"upload" : "fail"}
     
+    del model
+
     return {
         "Training" : "Succesfull",
         "Storing" : "Succesfull"

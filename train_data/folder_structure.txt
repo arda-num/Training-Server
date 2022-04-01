@@ -1,0 +1,11 @@
+--clientid
+    -- images (dir)
+        -- images (files...)
+    -- coco (dir)
+        -- annotations.json
+
+--clientid
+    -- images (dir)
+        -- images (files...)
+    -- coco (dir)
+        -- annotations.json
